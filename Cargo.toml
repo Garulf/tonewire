@@ -1,0 +1,37 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "bins/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+publish = false
+
+[workspace.dependencies]
+nodeaudio-dsp = { path = "crates/dsp" }
+nodeaudio-graph = { path = "crates/graph" }
+nodeaudio-proto = { path = "crates/proto" }
+nodeaudio-io = { path = "crates/io" }
+nodeaudio-nvafx = { path = "crates/nvafx" }
+serde = { version = "1", features = ["derive"] }
+toml = "1"
+postcard = { version = "1", features = ["use-std"] }
+interprocess = "2"
+rtrb = "0.4"
+rubato = "5"
+nnnoiseless = { version = "0.5", default-features = false }
+libloading = "0.9"
+directories = "6"
+thiserror = "2"
+log = "0.4"
+env_logger = "0.11"
+crossbeam-channel = "0.5"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
+[profile.dev.package."*"]
+opt-level = 2
