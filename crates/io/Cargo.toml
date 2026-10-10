@@ -6,3 +6,9 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+nodeaudio-graph.workspace = true
+rtrb.workspace = true
+rubato.workspace = true
+log.workspace = true
+crossbeam-channel.workspace = true
+thiserror.workspace = true
