@@ -1,0 +1,37 @@
+name: pr-prerelease
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr-prerelease-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    if: >-
+      github.event.action != 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && !startsWith(github.head_ref, 'release-please--')
+    uses: ./.github/workflows/publish.yml
+    with:
+      sha: ${{ github.event.pull_request.head.sha }}
+      tag: pr-${{ github.event.pull_request.number }}
+      title: "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+      notes: "Build of #${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}. Removed when the pull request closes."
+
+  cleanup:
+    if: >-
+      github.event.action == 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: pr-${{ github.event.pull_request.number }}
+    steps:
+      - run: gh release delete "$TAG" --cleanup-tag --yes || true

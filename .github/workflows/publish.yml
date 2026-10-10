@@ -1,0 +1,102 @@
+name: publish
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        type: string
+        required: true
+      tag:
+        type: string
+        required: true
+      prerelease:
+        type: boolean
+        default: true
+      title:
+        type: string
+        default: ""
+      notes:
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: x86_64-linux
+            cargo-args: --features tonewired/pipewire
+          - os: windows-latest
+            platform: x86_64-windows
+            cargo-args: ""
+    runs-on: ${{ matrix.os }}
+    env:
+      PACKAGE: tonewire-${{ inputs.tag }}-${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libpipewire-0.3-dev libclang-dev pkg-config
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: publish
+      - run: cargo build --release --workspace ${{ matrix.cargo-args }}
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "dist/$PACKAGE"
+          cp target/release/tonewire target/release/tonewired README.md "dist/$PACKAGE/"
+          cp -r packaging/linux "dist/$PACKAGE/packaging"
+          tar -C dist -czf "dist/$PACKAGE.tar.gz" "$PACKAGE"
+          rm -r "dist/$PACKAGE"
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "dist/$env:PACKAGE" | Out-Null
+          Copy-Item target/release/tonewire.exe, target/release/tonewired.exe, README.md "dist/$env:PACKAGE/"
+          Compress-Archive -Path "dist/$env:PACKAGE" -DestinationPath "dist/$env:PACKAGE.zip"
+          Remove-Item -Recurse "dist/$env:PACKAGE"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SHA: ${{ inputs.sha }}
+      TAG: ${{ inputs.tag }}
+      TITLE: ${{ inputs.title }}
+      NOTES: ${{ inputs.notes }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+      - name: Attach to existing release
+        if: ${{ !inputs.prerelease }}
+        run: gh release upload "$TAG" dist/* --clobber
+      - name: Create or update pre-release
+        if: ${{ inputs.prerelease }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh api -X PATCH "repos/$GH_REPO/git/refs/tags/$TAG" -f sha="$SHA" -F force=true > /dev/null
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --prerelease
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* --target "$SHA" --title "$TITLE" --notes "$NOTES" --prerelease
+          fi

@@ -8,11 +8,74 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      sha: ${{ steps.release.outputs.sha }}
+      pr: ${{ steps.release.outputs.pr }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - id: release
+        uses: googleapis/release-please-action@v5
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  release-assets:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/publish.yml
+    with:
+      sha: ${{ needs.release-please.outputs.sha }}
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      prerelease: false
+
+  drop-release-candidate:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.release-please.outputs.tag_name }}-rc
+    steps:
+      - run: gh release delete "$TAG" --cleanup-tag --yes || true
+
+  sync-lockfile:
+    needs: release-please
+    if: needs.release-please.outputs.pr
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+      version: ${{ steps.commit.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ fromJSON(needs.release-please.outputs.pr).headBranchName }}
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo update --workspace
+      - id: commit
+        run: |
+          if ! git diff --quiet Cargo.lock; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: sync Cargo.lock"
+            git push
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r '."."' .release-please-manifest.json)" >> "$GITHUB_OUTPUT"
+
+  release-candidate:
+    needs: [release-please, sync-lockfile]
+    uses: ./.github/workflows/publish.yml
+    with:
+      sha: ${{ needs.sync-lockfile.outputs.sha }}
+      tag: v${{ needs.sync-lockfile.outputs.version }}-rc
+      title: v${{ needs.sync-lockfile.outputs.version }} release candidate
+      notes: "Build of release PR #${{ fromJSON(needs.release-please.outputs.pr).number }}. Removed when the release is published."
