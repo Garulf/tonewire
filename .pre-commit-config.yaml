@@ -34,3 +34,8 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-push]
+  - repo: https://github.com/Garulf/readwright
+    rev: v0.5.0
+    hooks:
+      - id: readwright-check
+        stages: [pre-push]

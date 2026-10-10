@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=nodeaudio
+Comment=Route and process audio with a node graph
+Exec=nodeaudio
+Icon=audio-card
+Categories=AudioVideo;Audio;Mixer;
+Terminal=false

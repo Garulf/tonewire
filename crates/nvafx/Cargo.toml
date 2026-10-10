@@ -6,3 +6,7 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+nodeaudio-graph.workspace = true
+libloading.workspace = true
+rtrb.workspace = true
+log.workspace = true

@@ -15,6 +15,12 @@ const GAIN_SMOOTHING_MS: f32 = 10.0;
 /// Builds processors for node kinds this crate does not implement itself
 /// (NVIDIA effects). Called on the control thread.
 pub trait ExternalFactory: Send + Sync {
+    /// Why `kind` cannot be created right now, if it cannot.
+    fn unavailable(&self, kind: &NodeKind) -> Option<String> {
+        let _ = kind;
+        None
+    }
+
     fn create(
         &self,
         kind: &NodeKind,
