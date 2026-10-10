@@ -88,6 +88,10 @@ impl Platform for PipeWirePlatform {
         "pipewire"
     }
 
+    fn follows_default(&self) -> bool {
+        true
+    }
+
     fn devices(&mut self) -> Vec<DeviceInfo> {
         self.shared
             .lock()

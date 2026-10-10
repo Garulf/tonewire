@@ -44,4 +44,15 @@ pub trait Platform: Send {
     ) -> Result<StreamHandle, String>;
     /// Events since the last call. Must not block.
     fn poll(&mut self) -> Vec<PlatformEvent>;
+
+    /// True when streams without an explicit device move to a new system
+    /// default on their own (PipeWire); otherwise the router reopens them.
+    fn follows_default(&self) -> bool {
+        false
+    }
+
+    /// Frames a device stream delivers or consumes per callback.
+    fn device_period(&self, config: StreamConfig) -> usize {
+        config.block_frames as usize
+    }
 }

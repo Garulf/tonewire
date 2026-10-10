@@ -116,6 +116,7 @@ impl Daemon {
             tray_status: TrayStatus::default(),
         };
         daemon.install();
+        daemon.audio.router.apply(daemon.graph.endpoints());
         Ok(daemon)
     }
 
@@ -318,6 +319,11 @@ impl Daemon {
             Command::Shutdown => unreachable!("handled by the caller"),
         }
         if graph == self.graph {
+            if let Some(key) = &drag
+                && !dragging
+            {
+                self.history.close_drag(key);
+            }
             return Ok(Reply::Ok);
         }
         self.history.record(&before, drag, dragging);
@@ -342,7 +348,10 @@ impl Daemon {
                 }
             }
         }
-        self.audio.router.apply(self.graph.endpoints());
+        let endpoints = self.graph.endpoints();
+        if endpoints != before.endpoints() {
+            self.audio.router.apply(endpoints);
+        }
         self.dirty_since.get_or_insert_with(Instant::now);
         self.broadcast_graph();
     }
@@ -369,7 +378,6 @@ impl Daemon {
             }
             Err(e) => log::error!("graph rejected by the engine: {e}"),
         }
-        self.audio.router.apply(self.graph.endpoints());
     }
 
     fn restart_audio(&mut self) -> Result<(), String> {
@@ -380,6 +388,7 @@ impl Daemon {
         self.audio.router.set_muted(muted);
         self.audio.engine.set_metering(!self.clients.is_empty());
         self.install();
+        self.audio.router.apply(self.graph.endpoints());
         Ok(())
     }
 

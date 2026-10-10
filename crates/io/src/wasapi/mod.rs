@@ -263,6 +263,10 @@ impl Platform for WasapiPlatform {
         Ok(Box::new(WasapiStream { thread, closed }))
     }
 
+    fn device_period(&self, config: StreamConfig) -> usize {
+        config.sample_rate as usize / 100
+    }
+
     fn poll(&mut self) -> Vec<PlatformEvent> {
         let closed: Vec<NodeId> = self
             .routes

@@ -143,19 +143,15 @@ impl Clock {
             .store(node.map_or(0, |n| n.0), Ordering::Release);
     }
 
-    /// Runs the engine for `frames` if `node` is master. Never blocks.
+    /// Runs the engine for `frames` (at most one block) if `node` is master.
+    /// Never blocks.
     fn tick(&self, node: NodeId, frames: usize) -> bool {
         if !self.is_master(node) {
             return false;
         }
         match self.driver.try_lock() {
             Ok(mut driver) => {
-                let mut remaining = frames;
-                while remaining > 0 {
-                    let chunk = remaining.min(self.max_block);
-                    driver.run(chunk);
-                    remaining -= chunk;
-                }
+                driver.run(frames);
                 true
             }
             Err(_) => false,
@@ -223,25 +219,34 @@ impl PlaybackPort {
         self.clock.is_master(self.node)
     }
 
+    /// Frames waiting in the ring for the device.
+    pub fn buffered(&self) -> usize {
+        self.reader.fill()
+    }
+
     /// Fills an interleaved device buffer with `device_channels` channels.
-    /// When this endpoint is the clock master it runs the engine first.
+    /// When this endpoint is the clock master it runs the engine first, in
+    /// chunks of at most the engine's block size.
     pub fn render_interleaved(&mut self, out: &mut [f32], device_channels: usize) {
         self.status.running.store(true, Ordering::Relaxed);
         let device_channels = device_channels.max(1);
-        let frames = out.len() / device_channels;
-        let mode = if self.clock.tick(self.node, frames) {
-            ReadMode::Direct
-        } else {
-            ReadMode::Corrected
-        };
-        let delivered = self.reader.read(frames, mode, |i, frame| {
-            adapt(
-                frame,
-                &mut out[i * device_channels..(i + 1) * device_channels],
-            );
-        });
-        if !delivered {
-            out.fill(0.0);
+        let chunk_len = self.clock.max_block * device_channels;
+        for chunk in out.chunks_mut(chunk_len) {
+            let frames = chunk.len() / device_channels;
+            let mode = if self.clock.tick(self.node, frames) {
+                ReadMode::Direct
+            } else {
+                ReadMode::Corrected
+            };
+            let delivered = self.reader.read(frames, mode, |i, frame| {
+                adapt(
+                    frame,
+                    &mut chunk[i * device_channels..(i + 1) * device_channels],
+                );
+            });
+            if !delivered {
+                chunk.fill(0.0);
+            }
         }
     }
 }
@@ -272,11 +277,10 @@ pub struct HubControl {
     retired: Consumer<Port>,
     clock: Clock,
     muted: Arc<AtomicBool>,
-    target_frames: usize,
 }
 
 impl HubControl {
-    pub fn new(engine: Engine, target_frames: usize) -> Self {
+    pub fn new(engine: Engine) -> Self {
         let max_block = engine.config().max_block;
         let (commands_tx, commands_rx) = RingBuffer::new(MAX_ENDPOINTS * 2);
         let (retired_tx, retired_rx) = RingBuffer::new(MAX_ENDPOINTS * 2);
@@ -300,7 +304,6 @@ impl HubControl {
                 max_block,
             },
             muted,
-            target_frames,
         }
     }
 
@@ -317,10 +320,17 @@ impl HubControl {
     }
 
     /// Creates both ends of an endpoint; the engine end is queued for the hub.
-    pub fn add(&mut self, node: NodeId, capture: bool, channels: usize) -> Option<StreamPort> {
+    /// The ring holds about `target_frames` to absorb timing differences.
+    pub fn add(
+        &mut self,
+        node: NodeId,
+        capture: bool,
+        channels: usize,
+        target_frames: usize,
+    ) -> Option<StreamPort> {
         self.collect();
         let channels = channels.clamp(1, nodeaudio_graph::MAX_CHANNELS);
-        let (writer, reader) = ring(channels, self.target_frames, self.clock.max_block);
+        let (writer, reader) = ring(channels, target_frames, self.clock.max_block);
         let status = Arc::new(StreamStatus::default());
         let (engine_end, stream_end) = if capture {
             (
@@ -386,11 +396,11 @@ mod tests {
         };
         let (mut handle, engine) = engine(config, None);
         handle.install(&g).unwrap();
-        let mut control = HubControl::new(engine, 128);
-        let Some(StreamPort::Capture(mut capture)) = control.add(mic, true, 2) else {
+        let mut control = HubControl::new(engine);
+        let Some(StreamPort::Capture(mut capture)) = control.add(mic, true, 2, 128) else {
             panic!("capture port");
         };
-        let Some(StreamPort::Playback(mut playback)) = control.add(out, false, 2) else {
+        let Some(StreamPort::Playback(mut playback)) = control.add(out, false, 2, 128) else {
             panic!("playback port");
         };
         control.clock().set_master(Some(out));
@@ -410,6 +420,30 @@ mod tests {
             playback.render_interleaved(&mut device_out, 2);
         }
         assert!(device_out.iter().all(|&s| s == 0.0));
+    }
+
+    #[test]
+    fn oversized_master_callback_leaves_nothing_behind() {
+        let g = Graph::default();
+        let (mut handle, engine) = engine(
+            EngineConfig {
+                sample_rate: 48_000.0,
+                max_block: 128,
+            },
+            None,
+        );
+        handle.install(&g).unwrap();
+        let mut control = HubControl::new(engine);
+        let out = NodeId(9);
+        let Some(StreamPort::Playback(mut playback)) = control.add(out, false, 2, 128) else {
+            panic!("playback port");
+        };
+        control.clock().set_master(Some(out));
+        let mut device_out = vec![0.0f32; (2 * 128 + 5) * 2];
+        for _ in 0..3 {
+            playback.render_interleaved(&mut device_out, 2);
+            assert_eq!(playback.buffered(), 0);
+        }
     }
 
     #[test]

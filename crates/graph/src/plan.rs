@@ -20,6 +20,15 @@ pub struct StepSig {
     pub node: NodeId,
     pub kind: NodeKind,
     pub channels: u8,
+    /// The processor's own latency, so a carried step need not be rebuilt
+    /// to learn it.
+    pub own_latency: usize,
+}
+
+impl StepSig {
+    fn same_processor(&self, other: &StepSig) -> bool {
+        self.node == other.node && self.kind == other.kind && self.channels == other.channels
+    }
 }
 
 struct Source {
@@ -71,17 +80,34 @@ pub fn build(
         let spec = &graph.nodes[&node];
         let info = catalog::describe(&spec.kind);
         let channels = usize::from(spec.channels);
-        let processor = nodes::create(
-            &spec.kind,
-            channels,
-            ctx.sample_rate,
-            ctx.max_block,
-            ctx.external,
-        )
-        .unwrap_or_else(|err| {
-            report.warnings.push((node, err));
-            Box::new(PassThrough) as Box<dyn NodeProcessor>
-        });
+        let mut sig = StepSig {
+            node,
+            kind: spec.kind.clone(),
+            channels: spec.channels,
+            own_latency: 0,
+        };
+        let carried = previous.iter().find(|old| old.same_processor(&sig));
+        let processor: Box<dyn NodeProcessor> = match carried {
+            Some(old) => {
+                sig.own_latency = old.own_latency;
+                Box::new(PassThrough)
+            }
+            None => {
+                let built = nodes::create(
+                    &spec.kind,
+                    channels,
+                    ctx.sample_rate,
+                    ctx.max_block,
+                    ctx.external,
+                )
+                .unwrap_or_else(|err| {
+                    report.warnings.push((node, err));
+                    Box::new(PassThrough)
+                });
+                sig.own_latency = built.latency();
+                built
+            }
+        };
 
         let mut sources: Vec<Vec<Source>> = (0..info.inputs).map(|_| Vec::new()).collect();
         let mut arrival = 0;
@@ -102,17 +128,14 @@ pub fn build(
             }
         }
 
-        let latency = arrival + processor.latency();
+        let latency = arrival + sig.own_latency;
         output_latency.push(latency);
         report.latency.insert(node, latency);
-        report.layout.push(StepSig {
-            node,
-            kind: spec.kind.clone(),
-            channels: spec.channels,
-        });
+        let simple_effect = info.inputs == 1 && info.outputs == 1 && sig.own_latency == 0;
+        report.layout.push(sig);
         steps.push(Step {
             node,
-            simple_effect: info.inputs == 1 && info.outputs == 1 && processor.latency() == 0,
+            simple_effect,
             processor,
             shared: shared
                 .get(&node)
@@ -137,7 +160,7 @@ pub fn build(
         .filter_map(|(new, sig)| {
             previous
                 .iter()
-                .position(|old| old == sig)
+                .position(|old| old.same_processor(sig))
                 .map(|old| (new, old))
         })
         .collect();
@@ -361,6 +384,52 @@ pub(crate) mod tests {
         assert_eq!(plan.carry.len(), 1);
         assert_eq!(plan.steps[plan.carry[0].0].node, a);
         assert!(plan.steps.iter().any(|s| s.node == c));
+    }
+
+    #[test]
+    fn unchanged_nodes_are_not_rebuilt() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        struct Counting(AtomicUsize);
+        impl ExternalFactory for Counting {
+            fn create(
+                &self,
+                _: &NodeKind,
+                _: usize,
+                _: f32,
+                _: usize,
+            ) -> Result<Box<dyn NodeProcessor>, String> {
+                self.0.fetch_add(1, Ordering::Relaxed);
+                Ok(Box::new(PassThrough))
+            }
+        }
+        let factory = Counting(AtomicUsize::new(0));
+        let ctx = CompileCtx {
+            sample_rate: 48_000.0,
+            max_block: BLOCK,
+            external: Some(&factory),
+        };
+        let mut g = Graph::default();
+        g.add_node(NodeSpec::new(NodeKind::NvAfx {
+            effect: crate::model::NvAfxEffect::Denoiser,
+        }));
+        let (_, first) = build(&g, &ctx, &HashMap::new(), &[]).unwrap();
+        g.add_node(NodeSpec::new(NodeKind::Gain));
+        build(&g, &ctx, &HashMap::new(), &first.layout).unwrap();
+        assert_eq!(factory.0.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn carried_latency_still_aligns_branches() {
+        let mut g = Graph::default();
+        let mic = g.add_node(NodeSpec::new(NodeKind::DeviceInput));
+        let denoise = g.add_node(NodeSpec::new(NodeKind::Denoise));
+        let mixer = g.add_node(NodeSpec::new(NodeKind::Mixer { inputs: 2 }));
+        connect(&mut g, mic, denoise, 0);
+        connect(&mut g, denoise, mixer, 0);
+        let (_, first) = build(&g, &ctx(), &HashMap::new(), &[]).unwrap();
+        connect(&mut g, mic, mixer, 1);
+        let (_, second) = build(&g, &ctx(), &HashMap::new(), &first.layout).unwrap();
+        assert_eq!(second.latency[&mixer], 480);
     }
 
     #[test]

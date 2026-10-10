@@ -17,6 +17,12 @@ impl RingStats {
     }
 }
 
+/// Ring fill to aim for when the engine runs in `block_frames` chunks and
+/// the device delivers or takes `device_period` frames at a time.
+pub fn ring_target(block_frames: usize, device_period: usize) -> usize {
+    block_frames.max(2 * device_period)
+}
+
 /// Creates an interleaved ring of `channels` channels that the reader keeps
 /// filled to about `target_frames`, sized for `max_block` frames per call.
 pub fn ring(channels: usize, target_frames: usize, max_block: usize) -> (RingWriter, RingReader) {
@@ -257,19 +263,20 @@ mod tests {
         assert_eq!(w.stats().overruns.load(Ordering::Relaxed), 1);
     }
 
-    /// Writer runs `ppm` parts per million faster or slower than the reader.
-    fn simulate_drift(ppm: f64) -> (usize, usize, u32) {
+    /// Writer runs `ppm` parts per million faster or slower than the reader
+    /// and delivers in `packet`-frame bursts.
+    fn simulate(ppm: f64, packet: usize, target: usize) -> (usize, usize, u32) {
         let block = 128;
-        let target = 256;
-        let (mut w, mut r) = ring(1, target, block);
+        let (mut w, mut r) = ring(1, target, block.max(packet));
         let mut owed = 0.0f64;
         let (mut min_fill, mut max_fill) = (usize::MAX, 0);
         let blocks = 48_000 * 60 / block;
         for n in 0..blocks {
             owed += block as f64 * (1.0 + ppm * 1e-6);
-            let whole = owed.floor() as usize;
-            owed -= whole as f64;
-            w.write(whole, |_, f| f[0] = 0.1);
+            while owed >= packet as f64 {
+                owed -= packet as f64;
+                w.write(packet, |_, f| f[0] = 0.1);
+            }
             r.read(block, ReadMode::Corrected, |_, _| {});
             if n > blocks / 10 {
                 min_fill = min_fill.min(r.fill());
@@ -281,6 +288,21 @@ mod tests {
             max_fill,
             r.stats().underruns.load(Ordering::Relaxed),
         )
+    }
+
+    fn simulate_drift(ppm: f64) -> (usize, usize, u32) {
+        simulate(ppm, 1, 256)
+    }
+
+    #[test]
+    fn target_covers_device_packets_larger_than_the_block() {
+        let (_, _, block_sized) = simulate(0.0, 480, 128);
+        assert!(block_sized > 0, "a block-sized target should underrun");
+        let target = ring_target(128, 480);
+        for ppm in [-200.0, 0.0, 200.0] {
+            let (_, _, underruns) = simulate(ppm, 480, target);
+            assert_eq!(underruns, 0, "{ppm} ppm with 480-frame packets underran");
+        }
     }
 
     #[test]

@@ -147,3 +147,46 @@ fn mute_all_silences_outputs() {
     std::thread::sleep(Duration::from_millis(100));
     assert_eq!(rig.probe.take_peak(rig.speakers), 0.0);
 }
+
+#[test]
+fn follow_default_output_reopens_when_the_default_changes() {
+    let mut rig = rig();
+    let mut g = Graph::default();
+    let mic = NodeId(41);
+    let out = NodeId(42);
+    g.insert_node(mic, NodeSpec::new(NodeKind::DeviceInput));
+    g.insert_node(out, NodeSpec::new(NodeKind::DeviceOutput));
+    g.connect(Edge {
+        from: PortRef::new(mic, 0),
+        to: PortRef::new(out, 0),
+    })
+    .unwrap();
+    rig.router.apply(g.endpoints());
+    assert_eq!(rig.probe.opens(out), 1);
+    rig.probe.switch_default_speakers();
+    wait_for(&mut rig, "reopen on new default", |r| {
+        r.probe.opens(out) == 2
+    });
+    assert_eq!(rig.probe.opens(mic), 1);
+}
+
+#[test]
+fn reapplying_unchanged_endpoints_respects_backoff() {
+    let mut rig = rig();
+    let mut g = Graph::default();
+    let out = NodeId(43);
+    g.insert_node(out, NodeSpec::new(NodeKind::DeviceOutput));
+    rig.probe.fail_opens(true);
+    rig.router.apply(g.endpoints());
+    rig.router.apply(g.endpoints());
+    rig.router.tick(Instant::now());
+    assert_eq!(rig.probe.opens(out), 1);
+    g.node_mut(out).unwrap().device = device(NULL_SPEAKERS);
+    rig.probe.fail_opens(false);
+    rig.router.apply(g.endpoints());
+    assert_eq!(
+        rig.probe.opens(out),
+        2,
+        "a changed endpoint is retried at once"
+    );
+}

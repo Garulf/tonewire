@@ -226,6 +226,22 @@ fn undo_reverts_and_redo_restores() {
     });
     assert_eq!(c.request(Cmd::Undo), Reply::Ok);
     assert_eq!(c.graph().nodes[&a].params.get("gain_db"), None);
+    assert_eq!(c.request(Cmd::Redo), Reply::Ok);
+
+    let set = |c: &mut Client, value: f32, dragging: bool| {
+        c.request(Cmd::SetParam {
+            node: a,
+            key: "gain_db".into(),
+            value,
+            dragging,
+        })
+    };
+    set(&mut c, -6.0, true);
+    set(&mut c, -6.0, false);
+    set(&mut c, -9.0, true);
+    set(&mut c, -9.0, false);
+    assert_eq!(c.request(Cmd::Undo), Reply::Ok);
+    assert_eq!(c.graph().nodes[&a].params.get("gain_db"), Some(&-6.0));
 }
 
 #[test]

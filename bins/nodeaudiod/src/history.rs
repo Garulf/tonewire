@@ -42,6 +42,16 @@ impl History {
         self.redo.clear();
     }
 
+    /// Ends a drag whose final value matched the last dragged one, so the
+    /// next drag of the same param becomes its own undo step.
+    pub fn close_drag(&mut self, key: &DragKey) {
+        if let Some(last) = self.undo.back_mut()
+            && last.drag.as_ref() == Some(key)
+        {
+            last.drag = None;
+        }
+    }
+
     pub fn undo(&mut self, current: &Graph) -> Option<Graph> {
         let entry = self.undo.pop_back()?;
         self.redo.push(Entry {
@@ -106,6 +116,16 @@ mod tests {
         h.record(&graph_with(3), Some(key), true);
         assert_eq!(h.undo.len(), 2);
         assert_eq!(h.undo.front().unwrap().graph, start);
+    }
+
+    #[test]
+    fn closing_a_drag_starts_a_new_step_next_time() {
+        let mut h = History::default();
+        let key = (NodeId(1), "gain_db".to_string());
+        h.record(&graph_with(0), Some(key.clone()), true);
+        h.close_drag(&key);
+        h.record(&graph_with(1), Some(key), true);
+        assert_eq!(h.undo.len(), 2);
     }
 
     #[test]

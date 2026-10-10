@@ -52,7 +52,10 @@ pub fn from_toml(text: &str) -> Result<Graph, FormatError> {
         return Err(FormatError::UnsupportedVersion(file.version));
     }
     let mut graph = Graph::default();
-    for entry in file.nodes {
+    for mut entry in file.nodes {
+        if entry.spec.name.is_empty() {
+            entry.spec.name = crate::catalog::describe(&entry.spec.kind).label;
+        }
         graph.insert_node(entry.id, entry.spec);
     }
     graph.edges = file.edges.into_iter().collect();
@@ -114,6 +117,15 @@ mod tests {
             to_toml(&sample())
         );
         assert!(matches!(from_toml(&text), Err(FormatError::Invalid(_))));
+    }
+
+    #[test]
+    fn files_missing_optional_fields_still_load() {
+        let text = "version = 1\n\n[[nodes]]\nid = 1\nkind = \"gain\"\nname = \"Gain\"\n";
+        let g = from_toml(text).unwrap();
+        let spec = &g.nodes[&NodeId(1)];
+        assert_eq!(spec.channels, 2);
+        assert!(spec.params.is_empty() && spec.apps.is_empty() && !spec.bypass);
     }
 
     #[test]

@@ -178,10 +178,14 @@ fn run(
                         }
                     }
                     None => {
-                        let frames = (config.sample_rate as u64 * PROCESS_RETRY.as_millis() as u64
-                            / 1000) as usize;
-                        port.push_silence(frames);
-                        std::thread::sleep(PROCESS_RETRY);
+                        let slice = Duration::from_millis(u64::from(WAIT_MS));
+                        let frames = config.sample_rate as usize * WAIT_MS as usize / 1000;
+                        let mut waited = Duration::ZERO;
+                        while waited < PROCESS_RETRY && !stop.load(Ordering::Relaxed) {
+                            port.push_silence(frames);
+                            std::thread::sleep(slice);
+                            waited += slice;
+                        }
                     }
                 }
             }

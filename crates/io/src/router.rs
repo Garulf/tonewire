@@ -9,13 +9,15 @@ use nodeaudio_graph::{
 
 use crate::hub::{HubControl, StreamPort, StreamStatus};
 use crate::platform::{Platform, PlatformEvent, StreamConfig, StreamHandle};
-use crate::ring::RingStats;
+use crate::ring::{RingStats, ring_target};
 
 const FIRST_RETRY: Duration = Duration::from_secs(1);
 const MAX_RETRY: Duration = Duration::from_secs(30);
 
 struct OpenStream {
     spec: EndpointSpec,
+    /// The system default it was opened on, for endpoints that follow it.
+    opened_on_default: Option<String>,
     _handle: StreamHandle,
     status: Arc<StreamStatus>,
     ring: Arc<RingStats>,
@@ -54,7 +56,7 @@ impl Router {
         let apps = platform.apps();
         Self {
             platform,
-            hub: HubControl::new(engine, config.block_frames as usize),
+            hub: HubControl::new(engine),
             config,
             desired: BTreeMap::new(),
             open: BTreeMap::new(),
@@ -99,7 +101,10 @@ impl Router {
     }
 
     pub fn apply(&mut self, endpoints: Vec<EndpointSpec>) {
-        self.desired = endpoints.into_iter().map(|e| (e.node, e)).collect();
+        let previous = std::mem::replace(
+            &mut self.desired,
+            endpoints.into_iter().map(|e| (e.node, e)).collect(),
+        );
         let stale: Vec<NodeId> = self
             .open
             .iter()
@@ -113,8 +118,27 @@ impl Router {
         for id in stale {
             self.close(id);
         }
-        self.failed.retain(|id, _| self.desired.contains_key(id));
-        self.open_missing(Instant::now(), true);
+        self.failed.retain(|id, _| {
+            self.desired
+                .get(id)
+                .is_some_and(|d| previous.get(id) == Some(d))
+        });
+        self.open_missing(Instant::now(), false);
+    }
+
+    fn follows_default(spec: &EndpointSpec) -> Option<Direction> {
+        match (spec.kind, &spec.device) {
+            (EndpointKind::DeviceInput, None) => Some(Direction::Capture),
+            (EndpointKind::DeviceOutput, None) => Some(Direction::Playback),
+            _ => None,
+        }
+    }
+
+    fn current_default(&self, direction: Direction) -> Option<String> {
+        self.devices
+            .iter()
+            .find(|d| d.direction == direction && d.is_default)
+            .map(|d| d.id.clone())
     }
 
     pub fn tick(&mut self, now: Instant) -> Changes {
@@ -132,10 +156,16 @@ impl Router {
         }
         if changes.devices {
             self.devices = self.platform.devices();
+            let manage_defaults = !self.platform.follows_default();
             let gone: Vec<NodeId> = self
                 .open
                 .iter()
-                .filter(|(_, o)| !self.device_present(&o.spec))
+                .filter(|(_, o)| {
+                    let default_moved = manage_defaults
+                        && Self::follows_default(&o.spec)
+                            .is_some_and(|dir| self.current_default(dir) != o.opened_on_default);
+                    default_moved || !self.device_present(&o.spec)
+                })
                 .map(|(&id, _)| id)
                 .collect();
             for id in gone {
@@ -217,7 +247,14 @@ impl Router {
 
     fn try_open(&mut self, spec: EndpointSpec, now: Instant) {
         let capture = spec.kind.is_capture();
-        let Some(port) = self.hub.add(spec.node, capture, usize::from(spec.channels)) else {
+        let target = ring_target(
+            self.config.block_frames as usize,
+            self.platform.device_period(self.config),
+        );
+        let Some(port) = self
+            .hub
+            .add(spec.node, capture, usize::from(spec.channels), target)
+        else {
             self.fail(spec.node, "too many endpoints".into(), now);
             return;
         };
@@ -225,12 +262,15 @@ impl Router {
             StreamPort::Capture(p) => (p.status.clone(), p.ring_stats().clone()),
             StreamPort::Playback(p) => (p.status.clone(), p.ring_stats().clone()),
         };
+        let opened_on_default =
+            Self::follows_default(&spec).and_then(|dir| self.current_default(dir));
         match self.platform.open(&spec, port, self.config) {
             Ok(handle) => {
                 self.failed.remove(&spec.node);
                 self.open.insert(
                     spec.node,
                     OpenStream {
+                        opened_on_default,
                         spec,
                         _handle: handle,
                         status,

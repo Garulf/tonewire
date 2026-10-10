@@ -27,6 +27,8 @@ struct Playback {
 
 #[derive(Default)]
 struct State {
+    opens: HashMap<NodeId, usize>,
+    fail_opens: bool,
     devices: Vec<DeviceInfo>,
     captures: Vec<Capture>,
     playbacks: Vec<Playback>,
@@ -185,6 +187,10 @@ impl Platform for NullPlatform {
             .state
             .lock()
             .map_err(|_| "null backend poisoned".to_string())?;
+        *state.opens.entry(spec.node).or_default() += 1;
+        if state.fail_opens {
+            return Err("null backend told to fail".into());
+        }
         let device = spec.device.as_ref().map(|d| d.id.clone());
         let node = spec.node;
         match port {
@@ -239,6 +245,42 @@ impl NullProbe {
                 s.events
                     .push(PlatformEvent::StreamFailed(node, "device removed".into()));
             }
+        }
+    }
+
+    /// Times `open` was attempted for `node`.
+    pub fn opens(&self, node: NodeId) -> usize {
+        self.state
+            .lock()
+            .map(|s| s.opens.get(&node).copied().unwrap_or(0))
+            .unwrap_or(0)
+    }
+
+    pub fn fail_opens(&self, fail: bool) {
+        if let Ok(mut s) = self.state.lock() {
+            s.fail_opens = fail;
+        }
+    }
+
+    /// Adds a second pair of speakers and makes it the default output.
+    pub fn switch_default_speakers(&self) {
+        if let Ok(mut s) = self.state.lock() {
+            for d in s
+                .devices
+                .iter_mut()
+                .filter(|d| d.direction == Direction::Playback)
+            {
+                d.is_default = false;
+            }
+            s.devices.push(DeviceInfo {
+                id: "null.headphones".into(),
+                name: "Null headphones".into(),
+                direction: Direction::Playback,
+                channels: 2,
+                is_virtual: false,
+                is_default: true,
+            });
+            s.events.push(PlatformEvent::DevicesChanged);
         }
     }
 

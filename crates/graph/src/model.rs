@@ -167,18 +167,32 @@ pub enum AppMode {
     Tap,
 }
 
+fn default_channels() -> u8 {
+    2
+}
+
+/// Every field but `kind` has a default so graph files written by older
+/// versions keep loading when fields are added.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeSpec {
     pub kind: NodeKind,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
     pub pos: [f32; 2],
+    #[serde(default = "default_channels")]
     pub channels: u8,
+    #[serde(default)]
     pub bypass: bool,
+    #[serde(default)]
     pub params: BTreeMap<String, f32>,
     /// Device for device I/O nodes; `None` follows the system default.
+    #[serde(default)]
     pub device: Option<DeviceRef>,
     /// Apps routed into an App Source, or apps that should record from a Virtual Mic.
+    #[serde(default)]
     pub apps: Vec<AppRule>,
+    #[serde(default)]
     pub app_mode: AppMode,
 }
 
