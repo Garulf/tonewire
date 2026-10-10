@@ -2,9 +2,9 @@ use std::time::{Duration, Instant};
 
 use egui::{Color32, RichText};
 use egui_snarl::ui::{SnarlStyle, SnarlWidget};
-use nodeaudio_graph::catalog;
-use nodeaudio_graph::{NodeId, NodeKind};
-use nodeaudio_proto::{Command, EngineSettings, Reply, ServerMsg};
+use tonewire_graph::catalog;
+use tonewire_graph::{NodeId, NodeKind};
+use tonewire_proto::{Command, EngineSettings, Reply, ServerMsg};
 
 use crate::canvas::{Canvas, Viewer};
 use crate::client::{Connection, Incoming};
@@ -246,7 +246,7 @@ impl App {
         let mut open = true;
         let mut done = false;
         egui::Window::new("Import graph").open(&mut open).show(ctx, |ui| {
-            ui.label("Paste a graph exported from nodeaudio. It replaces the current graph (undo restores it).");
+            ui.label("Paste a graph exported from tonewire. It replaces the current graph (undo restores it).");
             ui.add(egui::TextEdit::multiline(&mut text).desired_rows(12).code_editor());
             if ui.button("Import").clicked() {
                 outbox.push(Command::ImportGraph { toml: text.clone() });
@@ -282,7 +282,7 @@ impl eframe::App for App {
         self.canvas.sync(&self.model.graph, pointer_down);
         egui::CentralPanel::default().show(ui, |ui| {
             if !self.model.connected {
-                ui.centered_and_justified(|ui| ui.label("Connecting to the nodeaudio daemon..."));
+                ui.centered_and_justified(|ui| ui.label("Connecting to the tonewire daemon..."));
                 return;
             }
             if self.model.graph.nodes.is_empty() {

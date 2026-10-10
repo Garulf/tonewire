@@ -1,4 +1,4 @@
-use nodeaudio_dsp::{
+use tonewire_dsp::{
     Biquad, BiquadCoeffs, BiquadKind, Compressor, CompressorSettings, DeEsser, DeEsserSettings,
     Denoiser, Gate, GateSettings, Limiter, Smoothed, db_to_gain,
 };

@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::{Duration, Instant};
 
-use nodeaudio_graph::{AppStream, DeviceInfo, Direction, EndpointSpec, NodeId};
+use tonewire_graph::{AppStream, DeviceInfo, Direction, EndpointSpec, NodeId};
 
 use crate::hub::{CapturePort, PlaybackPort, StreamPort};
 use crate::platform::{Platform, PlatformEvent, StreamConfig, StreamHandle};
@@ -120,7 +120,7 @@ fn run(state: Weak<Mutex<State>>, running: Arc<AtomicBool>, config: StreamConfig
     let frames = config.block_frames.max(1) as usize;
     let period = Duration::from_secs_f64(frames as f64 / f64::from(config.sample_rate));
     let step = TAU * SINE_HZ / config.sample_rate as f32;
-    let mut scratch = vec![0.0f32; frames * nodeaudio_graph::MAX_CHANNELS];
+    let mut scratch = vec![0.0f32; frames * tonewire_graph::MAX_CHANNELS];
     let mut mono = vec![0.0f32; frames];
     let mut deadline = Instant::now();
     while running.load(Ordering::Relaxed) {

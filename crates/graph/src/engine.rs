@@ -215,7 +215,7 @@ impl Engine {
     /// Fills per-thread caches some DSP code allocates on first use. Backends
     /// call this once on the thread that will run [`Engine::process`].
     pub fn prepare_thread(&self) {
-        nodeaudio_dsp::denoise::warm_up_thread();
+        tonewire_dsp::denoise::warm_up_thread();
     }
 
     /// Runs the graph for `frames` frames, in chunks of at most `max_block`.

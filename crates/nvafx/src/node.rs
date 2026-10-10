@@ -3,8 +3,8 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::thread::{JoinHandle, Thread};
 use std::time::Duration;
 
-use nodeaudio_graph::{NodeProcessor, ProcessCtx};
 use rtrb::{Consumer, Producer, RingBuffer};
+use tonewire_graph::{NodeProcessor, ProcessCtx};
 
 /// Something that turns fixed-size mono frames into processed frames on a
 /// worker thread (an NVIDIA effect, or a stand-in in tests).
@@ -21,7 +21,7 @@ pub trait FrameEffect: Send + 'static {
 pub struct WorkerNode {
     to_worker: Producer<f32>,
     from_worker: Consumer<f32>,
-    dry: nodeaudio_graph::buffer::DelayLine,
+    dry: tonewire_graph::buffer::DelayLine,
     mono: Vec<f32>,
     debt: usize,
     latency: usize,
@@ -79,7 +79,7 @@ impl WorkerNode {
         Ok(Self {
             to_worker,
             from_worker,
-            dry: nodeaudio_graph::buffer::DelayLine::new(1, latency, max_block),
+            dry: tonewire_graph::buffer::DelayLine::new(1, latency, max_block),
             mono: vec![0.0; max_block],
             debt: 0,
             latency,
@@ -173,7 +173,7 @@ impl NodeProcessor for WorkerNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::{
+    use tonewire_graph::{
         AudioBuf, Edge, EngineConfig, Graph, NodeId, NodeKind, NodeSpec, NvAfxEffect, PortRef,
         engine,
     };
@@ -195,7 +195,7 @@ mod tests {
 
     struct Factory;
 
-    impl nodeaudio_graph::ExternalFactory for Factory {
+    impl tonewire_graph::ExternalFactory for Factory {
         fn create(
             &self,
             _: &NodeKind,
@@ -212,7 +212,7 @@ mod tests {
         out: Vec<f32>,
     }
 
-    impl nodeaudio_graph::EndpointIo for Impulse {
+    impl tonewire_graph::EndpointIo for Impulse {
         fn read(&mut self, _: NodeId, dest: &mut AudioBuf, frames: usize) -> bool {
             let samples = dest.channel_mut(0, frames);
             samples.fill(0.0);

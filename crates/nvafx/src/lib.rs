@@ -6,7 +6,7 @@ mod node;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
-use nodeaudio_graph::{ExternalFactory, NodeKind, NodeProcessor, NvAfxEffect};
+use tonewire_graph::{ExternalFactory, NodeKind, NodeProcessor, NvAfxEffect};
 
 pub use node::{FrameEffect, WorkerNode};
 
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn missing_sdk_yields_no_factory() {
-        let dir = std::env::temp_dir().join("nodeaudio-no-sdk-here");
+        let dir = std::env::temp_dir().join("tonewire-no-sdk-here");
         let installed = candidates(Some(&dir)).iter().any(|p| p.is_file());
         assert_eq!(factory(Some(&dir)).is_some(), installed);
     }

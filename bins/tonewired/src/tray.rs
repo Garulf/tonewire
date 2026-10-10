@@ -40,11 +40,11 @@ mod linux {
 
     impl ksni::Tray for Tray {
         fn id(&self) -> String {
-            "nodeaudio".into()
+            "tonewire".into()
         }
 
         fn title(&self) -> String {
-            "nodeaudio".into()
+            "tonewire".into()
         }
 
         fn icon_name(&self) -> String {
@@ -57,7 +57,7 @@ mod linux {
 
         fn tool_tip(&self) -> ToolTip {
             ToolTip {
-                title: "nodeaudio".into(),
+                title: "tonewire".into(),
                 description: self.status.line.clone(),
                 ..ToolTip::default()
             }
@@ -189,7 +189,7 @@ mod windows {
         .map_err(|e| e.to_string())?;
         let mut builder = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
-            .with_tooltip("nodeaudio");
+            .with_tooltip("tonewire");
         if let Some(icon) = icon() {
             builder = builder.with_icon(icon);
         }
@@ -228,7 +228,7 @@ mod windows {
             while let Ok(update) = updates.try_recv() {
                 mute.set_checked(update.muted);
                 status.set_text(&update.line);
-                let _ = tray.set_tooltip(Some(format!("nodeaudio: {}", update.line)));
+                let _ = tray.set_tooltip(Some(format!("tonewire: {}", update.line)));
             }
         }
     }

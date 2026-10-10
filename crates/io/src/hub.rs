@@ -2,8 +2,8 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::ThreadId;
 
-use nodeaudio_graph::{AudioBuf, EndpointIo, Engine, NodeId};
 use rtrb::{Consumer, Producer, RingBuffer};
+use tonewire_graph::{AudioBuf, EndpointIo, Engine, NodeId};
 
 use crate::ring::{ReadMode, RingReader, RingWriter, ring};
 
@@ -329,7 +329,7 @@ impl HubControl {
         target_frames: usize,
     ) -> Option<StreamPort> {
         self.collect();
-        let channels = channels.clamp(1, nodeaudio_graph::MAX_CHANNELS);
+        let channels = channels.clamp(1, tonewire_graph::MAX_CHANNELS);
         let (writer, reader) = ring(channels, target_frames, self.clock.max_block);
         let status = Arc::new(StreamStatus::default());
         let (engine_end, stream_end) = if capture {
@@ -378,7 +378,7 @@ impl HubControl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::{Edge, EngineConfig, Graph, NodeKind, NodeSpec, PortRef, engine};
+    use tonewire_graph::{Edge, EngineConfig, Graph, NodeKind, NodeSpec, PortRef, engine};
 
     #[test]
     fn master_playback_runs_engine_and_hears_capture() {

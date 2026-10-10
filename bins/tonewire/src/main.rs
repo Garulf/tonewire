@@ -8,16 +8,16 @@ mod widgets;
 
 fn main() -> eframe::Result<()> {
     env_logger::init();
-    let address = nodeaudio_proto::transport::default_address();
+    let address = tonewire_proto::transport::default_address();
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("nodeaudio")
-            .with_app_id("nodeaudio")
+            .with_title("tonewire")
+            .with_app_id("tonewire")
             .with_inner_size([1200.0, 760.0]),
         ..Default::default()
     };
     eframe::run_native(
-        "nodeaudio",
+        "tonewire",
         options,
         Box::new(move |cc| {
             let ctx = cc.egui_ctx.clone();

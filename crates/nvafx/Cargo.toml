@@ -1,12 +1,12 @@
 [package]
-name = "nodeaudio-nvafx"
+name = "tonewire-nvafx"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-nodeaudio-graph.workspace = true
+tonewire-graph.workspace = true
 libloading.workspace = true
 rtrb.workspace = true
 log.workspace = true

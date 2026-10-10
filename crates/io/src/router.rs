@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
-use nodeaudio_graph::{
+use tonewire_graph::{
     AppStream, DeviceInfo, Direction, EndpointKind, EndpointSpec, EndpointStatus, Engine, NodeId,
 };
 

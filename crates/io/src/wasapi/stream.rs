@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use nodeaudio_graph::{AppRule, NodeId};
+use tonewire_graph::{AppRule, NodeId};
 use wasapi::{
     AudioClient, DeviceEnumerator, Direction, SampleType, StreamMode, WaveFormat, initialize_mta,
 };

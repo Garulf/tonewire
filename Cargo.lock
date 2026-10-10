@@ -2383,101 +2383,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nodeaudio"
-version = "0.1.0"
-dependencies = [
- "crossbeam-channel",
- "eframe",
- "egui",
- "egui-snarl",
- "env_logger",
- "interprocess",
- "log",
- "nodeaudio-dsp",
- "nodeaudio-graph",
- "nodeaudio-proto",
-]
-
-[[package]]
-name = "nodeaudio-dsp"
-version = "0.1.0"
-dependencies = [
- "nnnoiseless",
-]
-
-[[package]]
-name = "nodeaudio-graph"
-version = "0.1.0"
-dependencies = [
- "nodeaudio-dsp",
- "rtrb",
- "serde",
- "thiserror 2.0.21",
- "toml 1.1.8+spec-1.1.0",
-]
-
-[[package]]
-name = "nodeaudio-io"
-version = "0.1.0"
-dependencies = [
- "crossbeam-channel",
- "log",
- "nodeaudio-graph",
- "pipewire",
- "rtrb",
- "rubato",
- "thiserror 2.0.21",
- "wasapi",
- "windows",
- "windows-core",
-]
-
-[[package]]
-name = "nodeaudio-nvafx"
-version = "0.1.0"
-dependencies = [
- "libloading 0.9.0",
- "log",
- "nodeaudio-graph",
- "rtrb",
-]
-
-[[package]]
-name = "nodeaudio-proto"
-version = "0.1.0"
-dependencies = [
- "interprocess",
- "nodeaudio-graph",
- "postcard",
- "serde",
- "thiserror 2.0.21",
- "widestring",
-]
-
-[[package]]
-name = "nodeaudiod"
-version = "0.1.0"
-dependencies = [
- "crossbeam-channel",
- "ctrlc",
- "directories",
- "env_logger",
- "interprocess",
- "ksni",
- "log",
- "nodeaudio-graph",
- "nodeaudio-io",
- "nodeaudio-nvafx",
- "nodeaudio-proto",
- "serde",
- "toml 1.1.8+spec-1.1.0",
- "tray-icon",
- "windows-registry",
- "windows-result",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "nohash-hasher"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3920,6 +3825,101 @@ name = "toml_writer"
 version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06bdbd8cfc056b8d2e2e85f29b56a3bdbecb527cef81eb39e3e7b98af4652770"
+
+[[package]]
+name = "tonewire"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-channel",
+ "eframe",
+ "egui",
+ "egui-snarl",
+ "env_logger",
+ "interprocess",
+ "log",
+ "tonewire-dsp",
+ "tonewire-graph",
+ "tonewire-proto",
+]
+
+[[package]]
+name = "tonewire-dsp"
+version = "0.1.0"
+dependencies = [
+ "nnnoiseless",
+]
+
+[[package]]
+name = "tonewire-graph"
+version = "0.1.0"
+dependencies = [
+ "rtrb",
+ "serde",
+ "thiserror 2.0.21",
+ "toml 1.1.8+spec-1.1.0",
+ "tonewire-dsp",
+]
+
+[[package]]
+name = "tonewire-io"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-channel",
+ "log",
+ "pipewire",
+ "rtrb",
+ "rubato",
+ "thiserror 2.0.21",
+ "tonewire-graph",
+ "wasapi",
+ "windows",
+ "windows-core",
+]
+
+[[package]]
+name = "tonewire-nvafx"
+version = "0.1.0"
+dependencies = [
+ "libloading 0.9.0",
+ "log",
+ "rtrb",
+ "tonewire-graph",
+]
+
+[[package]]
+name = "tonewire-proto"
+version = "0.1.0"
+dependencies = [
+ "interprocess",
+ "postcard",
+ "serde",
+ "thiserror 2.0.21",
+ "tonewire-graph",
+ "widestring",
+]
+
+[[package]]
+name = "tonewired"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-channel",
+ "ctrlc",
+ "directories",
+ "env_logger",
+ "interprocess",
+ "ksni",
+ "log",
+ "serde",
+ "toml 1.1.8+spec-1.1.0",
+ "tonewire-graph",
+ "tonewire-io",
+ "tonewire-nvafx",
+ "tonewire-proto",
+ "tray-icon",
+ "windows-registry",
+ "windows-result",
+ "windows-sys 0.61.2",
+]
 
 [[package]]
 name = "tracing"

@@ -2,8 +2,8 @@ use std::io;
 
 use crossbeam_channel::{Receiver, Sender, TrySendError, bounded};
 use interprocess::local_socket::traits::{ListenerExt as _, Stream as _};
-use nodeaudio_proto::transport::{self, RecvHalf, SendHalf};
-use nodeaudio_proto::{ClientMsg, PROTOCOL_VERSION, ServerMsg, read_frame, write_frame};
+use tonewire_proto::transport::{self, RecvHalf, SendHalf};
+use tonewire_proto::{ClientMsg, PROTOCOL_VERSION, ServerMsg, read_frame, write_frame};
 
 use crate::daemon::Inbound;
 

@@ -1,5 +1,5 @@
 [package]
-name = "nodeaudiod"
+name = "tonewired"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,13 +8,13 @@ publish.workspace = true
 [features]
 default = ["tray"]
 tray = ["dep:ksni", "dep:tray-icon"]
-pipewire = ["nodeaudio-io/pipewire"]
+pipewire = ["tonewire-io/pipewire"]
 
 [dependencies]
-nodeaudio-graph.workspace = true
-nodeaudio-proto.workspace = true
-nodeaudio-io.workspace = true
-nodeaudio-nvafx.workspace = true
+tonewire-graph.workspace = true
+tonewire-proto.workspace = true
+tonewire-io.workspace = true
+tonewire-nvafx.workspace = true
 interprocess.workspace = true
 crossbeam-channel.workspace = true
 serde.workspace = true

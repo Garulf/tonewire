@@ -1,9 +1,9 @@
 //! Measures DSP cost of a typical voice chain:
-//! `cargo run --release -p nodeaudio-graph --example bench`
+//! `cargo run --release -p tonewire-graph --example bench`
 
 use std::time::Instant;
 
-use nodeaudio_graph::{
+use tonewire_graph::{
     AudioBuf, Edge, EndpointIo, EngineConfig, Graph, NodeId, NodeKind, NodeSpec, PortRef, engine,
 };
 

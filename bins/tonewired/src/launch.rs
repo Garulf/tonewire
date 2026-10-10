@@ -11,11 +11,11 @@ fn sibling(name: &str) -> PathBuf {
 }
 
 pub fn editor() {
-    if let Err(e) = Command::new(sibling("nodeaudio")).spawn() {
+    if let Err(e) = Command::new(sibling("tonewire")).spawn() {
         log::error!("cannot start the editor: {e}");
     }
 }
 
 pub fn daemon_path() -> PathBuf {
-    std::env::current_exe().unwrap_or_else(|_| sibling("nodeaudiod"))
+    std::env::current_exe().unwrap_or_else(|_| sibling("tonewired"))
 }

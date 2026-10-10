@@ -7,8 +7,8 @@ mod session;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 
-use nodeaudio_graph::{AppStream, DeviceInfo, EndpointSpec};
 use pipewire as pw;
+use tonewire_graph::{AppStream, DeviceInfo, EndpointSpec};
 
 use crate::hub::StreamPort;
 use crate::platform::{Platform, PlatformEvent, StreamConfig, StreamHandle};
@@ -17,7 +17,7 @@ const OPEN_TIMEOUT: Duration = Duration::from_secs(3);
 
 /// Prefix of every PipeWire node this process creates, so our own nodes can
 /// be hidden from device and app lists.
-pub(crate) const NODE_PREFIX: &str = "nodeaudio.";
+pub(crate) const NODE_PREFIX: &str = "tonewire.";
 
 #[derive(Default)]
 pub(crate) struct Shared {

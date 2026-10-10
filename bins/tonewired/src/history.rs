@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use nodeaudio_graph::{Graph, NodeId};
+use tonewire_graph::{Graph, NodeId};
 
 const CAPACITY: usize = 200;
 
@@ -82,7 +82,7 @@ impl History {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::{NodeKind, NodeSpec};
+    use tonewire_graph::{NodeKind, NodeSpec};
 
     fn graph_with(nodes: usize) -> Graph {
         let mut g = Graph::default();

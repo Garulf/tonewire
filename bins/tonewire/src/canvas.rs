@@ -3,9 +3,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use egui::{Pos2, Ui};
 use egui_snarl::ui::{PinInfo, SnarlPin, SnarlViewer};
 use egui_snarl::{InPin, InPinId, NodeId as SnarlId, OutPin, OutPinId, Snarl};
-use nodeaudio_graph::catalog::{self, Category};
-use nodeaudio_graph::{Edge, Graph, NodeId, NodeKind, PortRef};
-use nodeaudio_proto::Command;
+use tonewire_graph::catalog::{self, Category};
+use tonewire_graph::{Edge, Graph, NodeId, NodeKind, PortRef};
+use tonewire_proto::Command;
 
 use crate::model::Model;
 use crate::widgets::{self, Outbox};
@@ -312,7 +312,7 @@ impl SnarlViewer<NodeId> for Viewer<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::NodeSpec;
+    use tonewire_graph::NodeSpec;
 
     fn graph() -> (Graph, NodeId, NodeId) {
         let mut g = Graph::default();

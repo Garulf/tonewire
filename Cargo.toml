@@ -9,11 +9,11 @@ rust-version = "1.92"
 publish = false
 
 [workspace.dependencies]
-nodeaudio-dsp = { path = "crates/dsp" }
-nodeaudio-graph = { path = "crates/graph" }
-nodeaudio-proto = { path = "crates/proto" }
-nodeaudio-io = { path = "crates/io" }
-nodeaudio-nvafx = { path = "crates/nvafx" }
+tonewire-dsp = { path = "crates/dsp" }
+tonewire-graph = { path = "crates/graph" }
+tonewire-proto = { path = "crates/proto" }
+tonewire-io = { path = "crates/io" }
+tonewire-nvafx = { path = "crates/nvafx" }
 serde = { version = "1", features = ["derive"] }
 toml = "1"
 postcard = { version = "1", features = ["use-std"] }

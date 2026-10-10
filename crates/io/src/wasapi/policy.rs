@@ -4,7 +4,7 @@
 
 use std::ffi::c_void;
 
-use nodeaudio_graph::Direction;
+use tonewire_graph::Direction;
 use windows::Win32::Media::Audio::{
     EDataFlow, ERole, eCapture, eCommunications, eConsole, eMultimedia, eRender,
 };

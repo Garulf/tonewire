@@ -1,10 +1,10 @@
 use std::time::{Duration, Instant};
 
-use nodeaudio_graph::{
+use tonewire_graph::{
     DeviceRef, Edge, EngineConfig, Graph, NodeId, NodeKind, NodeSpec, PortRef, engine,
 };
-use nodeaudio_io::null::{NULL_MIC, NULL_SPEAKERS};
-use nodeaudio_io::{NullPlatform, NullProbe, Router, StreamConfig};
+use tonewire_io::null::{NULL_MIC, NULL_SPEAKERS};
+use tonewire_io::{NullPlatform, NullProbe, Router, StreamConfig};
 
 fn device(id: &str) -> Option<DeviceRef> {
     Some(DeviceRef {
@@ -20,7 +20,7 @@ struct Rig {
     mic: NodeId,
     speakers: NodeId,
     virtual_mic: NodeId,
-    _handle: nodeaudio_graph::EngineHandle,
+    _handle: tonewire_graph::EngineHandle,
 }
 
 fn rig() -> Rig {

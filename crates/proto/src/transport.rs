@@ -5,10 +5,10 @@ use interprocess::local_socket::{Listener, ListenerOptions, Name, Stream};
 
 pub use interprocess::local_socket::{RecvHalf, SendHalf};
 
-/// Where the daemon listens: `NODEAUDIO_SOCKET` if set, otherwise a socket in
+/// Where the daemon listens: `TONEWIRE_SOCKET` if set, otherwise a socket in
 /// the user's runtime dir (Unix) or a per-user named pipe (Windows).
 pub fn default_address() -> String {
-    if let Ok(addr) = std::env::var("NODEAUDIO_SOCKET")
+    if let Ok(addr) = std::env::var("TONEWIRE_SOCKET")
         && !addr.is_empty()
     {
         return addr;
@@ -19,8 +19,8 @@ pub fn default_address() -> String {
 #[cfg(unix)]
 fn platform_default() -> String {
     match std::env::var_os("XDG_RUNTIME_DIR") {
-        Some(dir) if !dir.is_empty() => format!("{}/nodeaudio.sock", dir.to_string_lossy()),
-        _ => format!("/tmp/nodeaudio-{}.sock", unix_user()),
+        Some(dir) if !dir.is_empty() => format!("{}/tonewire.sock", dir.to_string_lossy()),
+        _ => format!("/tmp/tonewire-{}.sock", unix_user()),
     }
 }
 
@@ -32,7 +32,7 @@ fn unix_user() -> String {
 #[cfg(windows)]
 fn platform_default() -> String {
     let user = std::env::var("USERNAME").unwrap_or_else(|_| "user".into());
-    format!("nodeaudio-{user}")
+    format!("tonewire-{user}")
 }
 
 #[cfg(unix)]
@@ -57,7 +57,7 @@ pub fn listen(address: &str) -> io::Result<Listener> {
     if connect(address).is_ok() {
         return Err(io::Error::new(
             io::ErrorKind::AddrInUse,
-            "another nodeaudio daemon is already running",
+            "another tonewire daemon is already running",
         ));
     }
     let options = ListenerOptions::new().name(name(address)?);
@@ -89,12 +89,12 @@ mod tests {
     fn temp_address(tag: &str) -> String {
         #[cfg(unix)]
         return format!(
-            "{}/nodeaudio-test-{tag}-{}.sock",
+            "{}/tonewire-test-{tag}-{}.sock",
             std::env::temp_dir().display(),
             std::process::id()
         );
         #[cfg(windows)]
-        return format!("nodeaudio-test-{tag}-{}", std::process::id());
+        return format!("tonewire-test-{tag}-{}", std::process::id());
     }
 
     #[test]

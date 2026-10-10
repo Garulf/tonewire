@@ -3,9 +3,9 @@ use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
 use interprocess::local_socket::Stream;
-use nodeaudio_graph::{DeviceRef, Edge, NodeId, NodeKind, PortRef};
-use nodeaudio_proto::transport::connect;
-use nodeaudio_proto::{
+use tonewire_graph::{DeviceRef, Edge, NodeId, NodeKind, PortRef};
+use tonewire_proto::transport::connect;
+use tonewire_proto::{
     ClientMsg, Command as Cmd, DaemonState, Event, GraphState, PROTOCOL_VERSION, Reply, ServerMsg,
     read_frame, write_frame,
 };
@@ -25,12 +25,12 @@ impl Drop for DaemonProcess {
 }
 
 fn start(tag: &str, prepare: impl FnOnce(&PathBuf)) -> DaemonProcess {
-    let base = std::env::temp_dir().join(format!("nodeaudiod-e2e-{tag}-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("tonewired-e2e-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     std::fs::create_dir_all(&base).unwrap();
     prepare(&base);
     let socket = base.join("ipc.sock").to_string_lossy().into_owned();
-    let child = Command::new(env!("CARGO_BIN_EXE_nodeaudiod"))
+    let child = Command::new(env!("CARGO_BIN_EXE_tonewired"))
         .args(["--backend", "null", "--no-tray", "--config-dir"])
         .arg(&base)
         .args(["--socket", &socket])
@@ -127,7 +127,7 @@ impl Client {
         }
     }
 
-    fn graph(&self) -> &nodeaudio_graph::Graph {
+    fn graph(&self) -> &tonewire_graph::Graph {
         &self.graph.as_ref().unwrap().graph
     }
 
@@ -287,7 +287,7 @@ fn a_misbehaving_client_does_not_affect_others() {
 fn second_daemon_on_same_socket_refuses_to_start() {
     let first = start("single", |_| {});
     let (_c, _) = Client::connect(&first);
-    let status = Command::new(env!("CARGO_BIN_EXE_nodeaudiod"))
+    let status = Command::new(env!("CARGO_BIN_EXE_tonewired"))
         .args(["--backend", "null", "--no-tray", "--config-dir"])
         .arg(&first.config_dir)
         .args(["--socket", &first.socket])

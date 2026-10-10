@@ -3,14 +3,14 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crossbeam_channel::{Receiver, Sender, unbounded};
-use nodeaudio_graph::catalog::{self, Category};
-use nodeaudio_graph::format::{from_toml, to_toml};
-use nodeaudio_graph::{
+use tonewire_graph::catalog::{self, Category};
+use tonewire_graph::format::{from_toml, to_toml};
+use tonewire_graph::{
     Edge, EngineConfig, EngineHandle, ExternalFactory, Graph, GraphError, NodeId, NodeKind,
     NodeSpec, engine,
 };
-use nodeaudio_io::{Router, StreamConfig};
-use nodeaudio_proto::{
+use tonewire_io::{Router, StreamConfig};
+use tonewire_proto::{
     ClientMsg, Command, DaemonState, EngineStats, Event, GraphState, KindAvailability,
     MeterReading, PROTOCOL_VERSION, Reply, ServerMsg,
 };
@@ -135,7 +135,7 @@ impl Daemon {
 
     pub fn run(mut self) {
         log::info!(
-            "nodeaudiod running ({} backend, socket {})",
+            "tonewired running ({} backend, socket {})",
             self.audio.router.backend_name(),
             self.options.socket
         );
@@ -145,7 +145,7 @@ impl Daemon {
                 if !self.handle(message) {
                     self.save_now();
                     self.flush_clients();
-                    log::info!("nodeaudiod stopped");
+                    log::info!("tonewired stopped");
                     return;
                 }
             }

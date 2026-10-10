@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=nodeaudio
+Name=tonewire
 Comment=Route and process audio with a node graph
-Exec=nodeaudio
+Exec=tonewire
 Icon=audio-card
 Categories=AudioVideo;Audio;Mixer;
 Terminal=false

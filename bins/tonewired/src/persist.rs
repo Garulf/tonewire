@@ -1,10 +1,10 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-use nodeaudio_graph::Graph;
-use nodeaudio_graph::format::{from_toml, to_toml};
-use nodeaudio_proto::EngineSettings;
 use serde::{Deserialize, Serialize};
+use tonewire_graph::Graph;
+use tonewire_graph::format::{from_toml, to_toml};
+use tonewire_proto::EngineSettings;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -120,11 +120,11 @@ fn write_atomic(path: &Path, text: &str) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::{NodeKind, NodeSpec};
+    use tonewire_graph::{NodeKind, NodeSpec};
 
     fn temp_store(tag: &str) -> Store {
         let dir =
-            std::env::temp_dir().join(format!("nodeaudiod-persist-{tag}-{}", std::process::id()));
+            std::env::temp_dir().join(format!("tonewired-persist-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         Store::new(dir).unwrap()
     }

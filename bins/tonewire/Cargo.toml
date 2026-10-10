@@ -1,14 +1,14 @@
 [package]
-name = "nodeaudio"
+name = "tonewire"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-nodeaudio-graph.workspace = true
-nodeaudio-dsp.workspace = true
-nodeaudio-proto.workspace = true
+tonewire-graph.workspace = true
+tonewire-dsp.workspace = true
+tonewire-proto.workspace = true
 interprocess.workspace = true
 crossbeam-channel.workspace = true
 log.workspace = true

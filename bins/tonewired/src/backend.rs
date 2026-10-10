@@ -1,5 +1,5 @@
-use nodeaudio_graph::{ExternalFactory, NvAfxEffect};
-use nodeaudio_io::{NullPlatform, Platform, StreamConfig};
+use tonewire_graph::{ExternalFactory, NvAfxEffect};
+use tonewire_io::{NullPlatform, Platform, StreamConfig};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BackendChoice {
@@ -27,14 +27,14 @@ pub fn create(choice: &BackendChoice, config: StreamConfig) -> Result<Box<dyn Pl
 
 #[cfg(all(target_os = "linux", feature = "pipewire"))]
 fn native(config: StreamConfig) -> Result<Box<dyn Platform>, String> {
-    nodeaudio_io::pipewire::PipeWirePlatform::connect(config)
+    tonewire_io::pipewire::PipeWirePlatform::connect(config)
         .map(|p| Box::new(p) as Box<dyn Platform>)
         .map_err(|e| format!("cannot connect to PipeWire: {e}"))
 }
 
 #[cfg(windows)]
 fn native(config: StreamConfig) -> Result<Box<dyn Platform>, String> {
-    nodeaudio_io::wasapi::WasapiPlatform::start(config)
+    tonewire_io::wasapi::WasapiPlatform::start(config)
         .map(|p| Box::new(p) as Box<dyn Platform>)
         .map_err(|e| format!("cannot start WASAPI: {e}"))
 }
@@ -50,7 +50,7 @@ pub fn nvafx_unavailable(
 ) -> Option<String> {
     match external {
         None => Some("NVIDIA Audio Effects SDK not found".into()),
-        Some(factory) => factory.unavailable(&nodeaudio_graph::NodeKind::NvAfx {
+        Some(factory) => factory.unavailable(&tonewire_graph::NodeKind::NvAfx {
             effect: effect.clone(),
         }),
     }

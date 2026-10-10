@@ -54,7 +54,7 @@ pub fn read_frame<R: Read, T: DeserializeOwned>(reader: &mut R) -> Result<T, Fra
 mod tests {
     use super::*;
     use crate::messages::*;
-    use nodeaudio_graph::{Edge, NodeId, NodeKind, NodeSpec, PortRef};
+    use tonewire_graph::{Edge, NodeId, NodeKind, NodeSpec, PortRef};
 
     fn round_trip<T: Serialize + DeserializeOwned + PartialEq + std::fmt::Debug>(message: T) {
         let mut wire = Vec::new();
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn messages_round_trip() {
-        let mut graph = nodeaudio_graph::Graph::default();
+        let mut graph = tonewire_graph::Graph::default();
         let a = graph.add_node(NodeSpec::new(NodeKind::DeviceInput));
         let b = graph.add_node(NodeSpec::new(NodeKind::Mixer { inputs: 3 }));
         graph

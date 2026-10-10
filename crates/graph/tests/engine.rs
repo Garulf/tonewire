@@ -2,7 +2,7 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use nodeaudio_graph::{
+use tonewire_graph::{
     AudioBuf, Edge, EndpointIo, EngineConfig, Graph, NodeId, NodeKind, NodeSpec, PortRef, engine,
 };
 

@@ -1,10 +1,10 @@
 use egui::{Color32, ComboBox, Pos2, Sense, Slider, Stroke, Ui, Vec2};
-use nodeaudio_dsp::{BiquadCoeffs, BiquadKind, gain_to_db};
-use nodeaudio_graph::catalog::{self, EQ_BANDS, ParamInfo, ParamKind, Unit};
-use nodeaudio_graph::{
+use tonewire_dsp::{BiquadCoeffs, BiquadKind, gain_to_db};
+use tonewire_graph::catalog::{self, EQ_BANDS, ParamInfo, ParamKind, Unit};
+use tonewire_graph::{
     AppMode, AppRule, DeviceRef, Direction, EndpointKind, NodeId, NodeKind, NodeSpec,
 };
-use nodeaudio_proto::{Command, MeterReading};
+use tonewire_proto::{Command, MeterReading};
 
 use crate::model::Model;
 
@@ -229,7 +229,7 @@ pub fn device_picker(
         EndpointKind::VirtualMic | EndpointKind::VirtualSpeaker | EndpointKind::AppSource
     );
     if virtual_only && model.backend == "pipewire" && kind != EndpointKind::AppSource {
-        ui.weak("Created by nodeaudio");
+        ui.weak("Created by tonewire");
         return;
     }
     let loopback = spec.device.as_ref().is_some_and(|d| d.loopback);

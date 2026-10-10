@@ -10,10 +10,10 @@ pub fn set(enabled: bool) -> io::Result<()> {
         .map_err(io::Error::other)?;
     if enabled {
         let command = format!("\"{}\"", daemon_path().display());
-        key.set_string("nodeaudiod", &command)
+        key.set_string("tonewired", &command)
             .map_err(io::Error::other)
     } else {
-        match key.remove_value("nodeaudiod") {
+        match key.remove_value("tonewired") {
             Ok(()) => Ok(()),
             Err(e) if e.code() == windows_result::HRESULT::from_win32(2) => Ok(()),
             Err(e) => Err(io::Error::other(e)),
@@ -26,7 +26,7 @@ pub fn set(enabled: bool) -> io::Result<()> {
     let dir = directories::BaseDirs::new()
         .map(|d| d.config_dir().join("autostart"))
         .ok_or_else(|| io::Error::other("no home directory"))?;
-    let file = dir.join("nodeaudiod.desktop");
+    let file = dir.join("tonewired.desktop");
     if enabled {
         std::fs::create_dir_all(&dir)?;
         std::fs::write(&file, desktop_entry())
@@ -41,7 +41,7 @@ pub fn set(enabled: bool) -> io::Result<()> {
 #[cfg(not(windows))]
 fn desktop_entry() -> String {
     format!(
-        "[Desktop Entry]\nType=Application\nName=nodeaudio daemon\nExec=\"{}\"\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
+        "[Desktop Entry]\nType=Application\nName=tonewire daemon\nExec=\"{}\"\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
         daemon_path().display()
     )
 }

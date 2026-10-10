@@ -5,13 +5,13 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::Duration;
 
-use nodeaudio_graph::{AppMode, AppStream, DeviceInfo, Direction, EndpointKind, EndpointSpec};
 use pipewire as pw;
 use pw::properties::{PropertiesBox, properties};
 use pw::registry::{GlobalObject, RegistryRc};
 use pw::spa::utils::dict::DictRef;
 use pw::stream::{StreamFlags, StreamRc, StreamState};
 use pw::types::ObjectType;
+use tonewire_graph::{AppMode, AppStream, DeviceInfo, Direction, EndpointKind, EndpointSpec};
 
 use super::format::{audio_format, pod};
 use super::{Cmd, NODE_PREFIX, Shared};
@@ -458,15 +458,15 @@ fn stream_props(
 ) -> (PropertiesBox, pw::spa::utils::Direction) {
     use pw::spa::utils::Direction as PwDirection;
     let description = match spec.kind {
-        EndpointKind::AppSource => format!("nodeaudio: {} (apps)", spec.name),
+        EndpointKind::AppSource => format!("tonewire: {} (apps)", spec.name),
         EndpointKind::VirtualMic | EndpointKind::VirtualSpeaker => spec.name.clone(),
-        _ => format!("nodeaudio: {}", spec.name),
+        _ => format!("tonewire: {}", spec.name),
     };
     let mut props = properties! {
         *pw::keys::MEDIA_TYPE => "Audio",
         *pw::keys::NODE_NAME => name,
         *pw::keys::NODE_DESCRIPTION => description,
-        *pw::keys::APP_NAME => "nodeaudio",
+        *pw::keys::APP_NAME => "tonewire",
         *pw::keys::NODE_LATENCY => format!("{}/{}", config.block_frames, config.sample_rate),
         *pw::keys::AUDIO_CHANNELS => spec.channels.max(1).to_string(),
     };

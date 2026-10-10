@@ -1,10 +1,10 @@
 [Unit]
-Description=nodeaudio audio routing daemon
+Description=tonewire audio routing daemon
 After=pipewire.service wireplumber.service
 Wants=pipewire.service
 
 [Service]
-ExecStart=%h/.local/bin/nodeaudiod --no-tray
+ExecStart=%h/.local/bin/tonewired --no-tray
 Restart=on-failure
 RestartSec=2
 

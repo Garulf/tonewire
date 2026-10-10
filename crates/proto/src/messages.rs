@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use nodeaudio_graph::catalog::Category;
-use nodeaudio_graph::{
+use tonewire_graph::catalog::Category;
+use tonewire_graph::{
     AppMode, AppRule, AppStream, DeviceInfo, DeviceRef, Edge, EndpointStatus, Graph, NodeId,
     NodeKind,
 };

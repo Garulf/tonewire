@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use nodeaudio_graph::{AppStream, DeviceInfo, EndpointSpec, NodeId};
+use tonewire_graph::{AppStream, DeviceInfo, EndpointSpec, NodeId};
 
 use crate::hub::StreamPort;
 

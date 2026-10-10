@@ -1,12 +1,12 @@
 [package]
-name = "nodeaudio-io"
+name = "tonewire-io"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-nodeaudio-graph.workspace = true
+tonewire-graph.workspace = true
 rtrb.workspace = true
 rubato.workspace = true
 log.workspace = true

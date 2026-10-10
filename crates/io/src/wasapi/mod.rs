@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use nodeaudio_graph::{
+use tonewire_graph::{
     AppMode, AppStream, DeviceInfo, Direction, EndpointKind, EndpointSpec, NodeId,
 };
 use wasapi::{DeviceEnumerator, initialize_mta};

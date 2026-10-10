@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use nodeaudio_graph::{AppStream, DeviceInfo, EndpointStatus, Graph, NodeId};
-use nodeaudio_proto::{
+use tonewire_graph::{AppStream, DeviceInfo, EndpointStatus, Graph, NodeId};
+use tonewire_proto::{
     DaemonState, EngineSettings, EngineStats, Event, KindAvailability, MeterReading,
 };
 
@@ -77,8 +77,8 @@ impl Model {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nodeaudio_graph::{NodeKind, NodeSpec};
-    use nodeaudio_proto::GraphState;
+    use tonewire_graph::{NodeKind, NodeSpec};
+    use tonewire_proto::GraphState;
 
     #[test]
     fn echo_does_not_override_a_param_being_dragged() {

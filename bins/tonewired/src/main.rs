@@ -17,9 +17,9 @@ use daemon::{Daemon, Inbound, Options};
 use persist::Store;
 
 const USAGE: &str = "\
-nodeaudiod: the nodeaudio routing daemon
+tonewired: the tonewire routing daemon
 
-Usage: nodeaudiod [options]
+Usage: tonewired [options]
 
 Options:
   --backend <auto|null>   Audio backend (default: auto)
@@ -62,7 +62,7 @@ fn parse(mut args: impl Iterator<Item = String>) -> Result<Option<Args>, String>
                 })
             }
             "--version" => {
-                println!("nodeaudiod {}", env!("CARGO_PKG_VERSION"));
+                println!("tonewired {}", env!("CARGO_PKG_VERSION"));
                 return Ok(None);
             }
             "--help" | "-h" => {
@@ -76,9 +76,9 @@ fn parse(mut args: impl Iterator<Item = String>) -> Result<Option<Args>, String>
 }
 
 fn default_config_dir() -> PathBuf {
-    directories::ProjectDirs::from("", "", "nodeaudio")
+    directories::ProjectDirs::from("", "", "tonewire")
         .map(|d| d.config_dir().to_path_buf())
-        .unwrap_or_else(|| PathBuf::from(".nodeaudio"))
+        .unwrap_or_else(|| PathBuf::from(".tonewire"))
 }
 
 fn init_logging(config_dir: &std::path::Path) {
@@ -86,7 +86,7 @@ fn init_logging(config_dir: &std::path::Path) {
         env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
     if cfg!(windows) {
         let _ = std::fs::create_dir_all(config_dir);
-        if let Ok(file) = std::fs::File::create(config_dir.join("nodeaudiod.log")) {
+        if let Ok(file) = std::fs::File::create(config_dir.join("tonewired.log")) {
             builder.target(env_logger::Target::Pipe(Box::new(file)));
         }
     }
@@ -125,10 +125,10 @@ fn main() -> ExitCode {
         backend: args.backend,
         socket: args
             .socket
-            .unwrap_or_else(nodeaudio_proto::transport::default_address),
+            .unwrap_or_else(tonewire_proto::transport::default_address),
         store,
     };
-    let external = nodeaudio_nvafx::factory(options.store.load_settings().nvafx_sdk.as_deref());
+    let external = tonewire_nvafx::factory(options.store.load_settings().nvafx_sdk.as_deref());
     let mut daemon = match Daemon::new(options, external) {
         Ok(daemon) => daemon,
         Err(e) => {

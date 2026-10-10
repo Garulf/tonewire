@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use nodeaudio_graph::{AppStream, Direction};
+use tonewire_graph::{AppStream, Direction};
 use wasapi::DeviceEnumerator;
 use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Diagnostics::ToolHelp::{

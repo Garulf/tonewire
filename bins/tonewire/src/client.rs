@@ -4,8 +4,8 @@ use std::time::{Duration, Instant};
 
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use interprocess::local_socket::traits::Stream as _;
-use nodeaudio_proto::transport::{RecvHalf, SendHalf, connect};
-use nodeaudio_proto::{ClientMsg, Command, PROTOCOL_VERSION, ServerMsg, read_frame, write_frame};
+use tonewire_proto::transport::{RecvHalf, SendHalf, connect};
+use tonewire_proto::{ClientMsg, Command, PROTOCOL_VERSION, ServerMsg, read_frame, write_frame};
 
 const RETRY: Duration = Duration::from_secs(1);
 const DAEMON_STARTUP: Duration = Duration::from_secs(5);
@@ -44,7 +44,7 @@ impl Connection {
 }
 
 fn daemon_path() -> PathBuf {
-    let exe = format!("nodeaudiod{}", std::env::consts::EXE_SUFFIX);
+    let exe = format!("tonewired{}", std::env::consts::EXE_SUFFIX);
     std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|d| d.join(&exe)))
@@ -54,7 +54,7 @@ fn daemon_path() -> PathBuf {
 
 fn launch_daemon(address: &str) -> std::io::Result<()> {
     let mut command = Process::new(daemon_path());
-    if std::env::var_os("NODEAUDIO_SOCKET").is_none() {
+    if std::env::var_os("TONEWIRE_SOCKET").is_none() {
         command.args(["--socket", address]);
     }
     command
@@ -74,7 +74,7 @@ fn connect_or_launch(
     }
     if !*launched {
         *launched = true;
-        launch_daemon(address).map_err(|e| format!("cannot start nodeaudiod: {e}"))?;
+        launch_daemon(address).map_err(|e| format!("cannot start tonewired: {e}"))?;
         let deadline = Instant::now() + DAEMON_STARTUP;
         while Instant::now() < deadline {
             if let Ok(stream) = connect(address) {
@@ -83,7 +83,7 @@ fn connect_or_launch(
             std::thread::sleep(Duration::from_millis(100));
         }
     }
-    Err("the nodeaudio daemon is not running".into())
+    Err("the tonewire daemon is not running".into())
 }
 
 fn run(
@@ -174,7 +174,7 @@ fn handshake(recv: &mut RecvHalf, send: &mut SendHalf) -> Result<(), String> {
     match read_frame::<_, ServerMsg>(recv).map_err(|e| e.to_string())? {
         ServerMsg::Hello { version } if version == PROTOCOL_VERSION => Ok(()),
         ServerMsg::Hello { version } => Err(format!(
-            "the running daemon speaks protocol {version} but this editor needs {PROTOCOL_VERSION}; restart nodeaudiod"
+            "the running daemon speaks protocol {version} but this editor needs {PROTOCOL_VERSION}; restart tonewired"
         )),
         _ => Err("unexpected greeting from the daemon".into()),
     }

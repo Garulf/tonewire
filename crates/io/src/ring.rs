@@ -78,7 +78,7 @@ impl RingWriter {
         };
         let (a, b) = chunk.as_mut_slices();
         let mut index = 0;
-        let mut tmp = [0.0f32; nodeaudio_graph::MAX_CHANNELS];
+        let mut tmp = [0.0f32; tonewire_graph::MAX_CHANNELS];
         for i in 0..fit {
             let out = &mut tmp[..self.channels];
             frame(i, out);
@@ -212,7 +212,7 @@ impl RingReader {
             }
             return;
         }
-        let mut out = [0.0f32; nodeaudio_graph::MAX_CHANNELS];
+        let mut out = [0.0f32; tonewire_graph::MAX_CHANNELS];
         let step = (take - 1) as f64 / (frames - 1).max(1) as f64;
         for i in 0..frames {
             let pos = i as f64 * step;
