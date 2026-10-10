@@ -2,6 +2,7 @@
 
 pub mod buffer;
 pub mod catalog;
+pub mod devices;
 pub mod engine;
 pub mod format;
 pub mod model;
@@ -13,6 +14,7 @@ pub mod shared;
 pub const MAX_CHANNELS: usize = 8;
 
 pub use buffer::AudioBuf;
+pub use devices::{AppStream, DeviceInfo, Direction, EndpointStatus};
 pub use engine::{Engine, EngineConfig, EngineHandle, NodeMeter, StatsSnapshot, engine};
 pub use model::{
     AppMode, AppRule, DeviceRef, Edge, EndpointKind, EndpointSpec, Graph, GraphError, NodeId,
