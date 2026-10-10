@@ -20,6 +20,15 @@ impl std::fmt::Debug for Denoiser {
     }
 }
 
+/// RNNoise keeps a per-thread FFT plan cache that allocates on first use.
+/// Call this once on the audio thread before real-time processing starts.
+pub fn warm_up_thread() {
+    let mut state = DenoiseState::new();
+    let input = [0.0; DenoiseState::FRAME_SIZE];
+    let mut output = [0.0; DenoiseState::FRAME_SIZE];
+    state.process_frame(&mut output, &input);
+}
+
 impl Default for Denoiser {
     fn default() -> Self {
         Self::new()
